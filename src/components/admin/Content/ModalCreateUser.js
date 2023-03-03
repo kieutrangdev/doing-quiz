@@ -3,10 +3,19 @@ import React, { useState } from "react";
 import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
 import { FcPlus } from "react-icons/fc";
+import { toast } from "react-toastify";
 
 const ModalCreateUser = (props) => {
   const { show, setShow } = props;
-  const handleClose = () => setShow(false);
+  const handleClose = () => {
+    setShow(false);
+    setEmail("");
+    setPassword("");
+    setUsername("");
+    setEmail("");
+    setImage("");
+    setRole("USER");
+  };
   const handleShow = () => setShow(true);
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("USER");
@@ -14,33 +23,61 @@ const ModalCreateUser = (props) => {
   const [username, setUsername] = useState("");
   const [image, setImage] = useState("");
   const [previewImage, setPreviewImage] = useState("");
+  const validateEmail = (email) => {
+    return String(email)
+      .toLowerCase()
+      .match(
+        /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+      );
+  };
+  const validatePassword = (password) => {
+    if (password === "") {
+      return;
+    }
+  };
   const handleUploadImage = (event) => {
     setPreviewImage(URL.createObjectURL(event.target.files[0]));
     setImage(event.target.files[0]);
     console.log("upload file", event.target.files[0]);
   };
 
-  const handleSubmitCreateUser = async() => {
-    alert("click me");
+  const handleSubmitCreateUser = async () => {
     //validate
-
-    //call apis
-    // let data = {
-    //   email: email,
-    //   password: password,
-    //   username: username,
-    //   image: image,
-    //   role:role
+    const isValidEmail = validateEmail(email);
+    if (!isValidEmail) {
+      toast.error("Invalid email");
+      return;
+    }
+    const isValidPassword = validatePassword(password)
+    if (isValidPassword) {
+      toast.error("Invalid password");
+      return;
+    }
+    // if (!isValidEmail) {
+    //   toast.error('Invalid email')
+    //   return;
     // }
+
+    //submit data
     const formData = new FormData();
-    formData.append('email', email);
-    formData.append('password', password);
-    formData.append('username', username);
-    formData.append('role', role);
-    formData.append('image', image);
-    
-   let res = await axios.post('http://localhost:8081/api/v1/participant',formData)
-    console.log('check res: ' ,res)
+    formData.append("email", email);
+    formData.append("password", password);
+    formData.append("username", username);
+    formData.append("role", role);
+    formData.append("image", image);
+
+    let res = await axios.post(
+      "http://localhost:8081/api/v1/participant",
+      formData
+    );
+
+    if (res.data && res.data.EC === 0) {
+      toast.success(res.data.EM);
+      handleClose();
+    }
+    if (res.data && res.data.EC !== 0) {
+      toast.error(res.data.EM);
+    }
   };
   return (
     <>
